@@ -1,0 +1,24 @@
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: datanode
+  namespace: hadoop
+spec:
+  serviceName: datanode
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: datanode
+    spec:
+      containers:
+        - name: datanode
+          image: elek/hadoop-hdfs-datanode:latest
+          volumeMounts:
+            - name: config
+              mountPath: "/opt/hadoop/etc/hadoop"
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: hadoopconf 

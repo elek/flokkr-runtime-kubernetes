@@ -1,0 +1,43 @@
+apiVersion: v1
+data:
+  core-site.xml: |-
+    <configuration>
+    <property><name>fs.defaultFS</name><value>hdfs://namenode-0:9000</value></property>
+    </configuration>
+  hdfs-site.xml: |-
+    <configuration>
+    <property><name>dfs.namenode.rpc-address</name><value>namenode-0.namenode:9000</value></property>
+    <property><name>dfs.replication</name><value>3</value></property>
+    <property><name>dfs.permissions.superusergroup</name><value>admin</value></property>
+    <property><name>dfs.datanode.data.dir</name><value>/data/datanode</value></property>
+    <property><name>dfs.namenode.name.dir</name><value>/data/namenode</value></property>
+    <property><name>dfs.namenode.http-bind-host</name><value>0.0.0.0</value></property>
+    </configuration>
+  log4j.properties: |-
+    log4j.rootLogger: INFO, stdout
+
+    log4j.appender.stdout: org.apache.log4j.ConsoleAppender
+    log4j.appender.stdout.layout: org.apache.log4j.PatternLayout
+    log4j.appender.stdout.layout.ConversionPattern: %d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n
+  mapred-site.xml: |-
+    <configuration>
+    <property><name>mapreduce.framework.name</name><value>yarn</value></property>
+    </configuration>
+  yarn-site.xml: |-
+    <configuration>
+    <property><name>yarn.resourcemanager.hostname</name><value>namenode-0</value></property>
+    <property><name>yarn.nodemanager.pmem-check-enabled</name><value>false</value></property>
+    <property><name>yarn.nodemanager.delete.debug-delay-sec</name><value>600</value></property>
+    <property><name>yarn.nodemanager.vmem-check-enabled</name><value>false</value></property>
+    <property><name>yarn.nodemanager.aux-services</name><value>mapreduce_shuffle</value></property>
+    <property><name>yarn.nodemanager.delete.thread-count</name><value>0</value></property>
+    <property><name>yarn.nodemanager.local-dirs</name><value>/data/nodemanagerlocaldir</value></property>
+    <property><name>yarn.resourcemanager.bind-host</name><value>0.0.0.0</value></property>
+    <property><name>yarn.nodemanager.bind-host</name><value>0.0.0.0</value></property>
+    <property><name>yarn.scheduler.maximum-allocation-mb</name><value>12000</value></property>
+    <property><name>yarn.nodemanager.resource.memory-mb</name><value>12000</value></property>
+    </configuration>
+kind: ConfigMap
+metadata:
+  name: hadoopconf
+  namespace: hadoop
