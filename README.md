@@ -40,10 +40,7 @@ kubectl apply -f config.yaml
 ### HDFS/YARN cluster
 
 ```
-kubectl apply -f namenode.yaml
-kubectl apply -f datanode.yaml
-kubectl apply -f resourcemanager.yaml
-kubectl apply -f nodemanager.yaml
+kubectl apply -f hdfs.yaml
 
 ```
 
