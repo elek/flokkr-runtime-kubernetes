@@ -1,0 +1,21 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: datanodeds
+spec:
+  template:
+    metadata:
+      labels:
+        app: datanodeds
+    spec:
+      containers:
+        - name: namenode
+          image: flokkr/hadoop-hdfs-datanode:latest
+          volumeMounts:
+            - name: config
+              mountPath: "/opt/hadoop/etc/hadoop"
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: hadoopconf
