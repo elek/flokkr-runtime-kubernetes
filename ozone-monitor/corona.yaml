@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: corona
+spec:
+  template:
+    metadata:
+      name: corona
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: corona
+          image: flokkr/hadoop:ozone
+          args: ["hdfs","corona"]
+          volumeMounts:
+            - name: config
+              mountPath: "/opt/hadoop/etc/hadoop"
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: hadoopconf
+  backoffLimit: 4

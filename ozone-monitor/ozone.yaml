@@ -1,0 +1,202 @@
+apiVersion: v1
+data:
+  core-site.xml: |-
+    <configuration>
+    <property><name>fs.defaultFS</name><value>hdfs://namenode-0:9000</value></property>
+    </configuration>
+  hdfs-site.xml: |-
+    <configuration>
+    <property><name>dfs.namenode.rpc-address</name><value>namenode-0.namenode:9000</value></property>
+    <property><name>dfs.replication</name><value>3</value></property>
+    <property><name>dfs.permissions.superusergroup</name><value>admin</value></property>
+    <property><name>dfs.datanode.data.dir</name><value>/data/datanode</value></property>
+    <property><name>dfs.namenode.name.dir</name><value>/data/namenode</value></property>
+    <property><name>dfs.namenode.http-bind-host</name><value>0.0.0.0</value></property>
+    <property><name>dfs.namenode.datanode.registration.ip-hostname-check</name><value>false</value></property>
+    </configuration>
+  log4j.properties: |-
+    log4j.rootLogger: INFO, stdout
+    log4j.appender.stdout: org.apache.log4j.ConsoleAppender
+    log4j.appender.stdout.layout: org.apache.log4j.PatternLayout
+    log4j.appender.stdout.layout.ConversionPattern: %d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n
+  ozone-site.xml: |-
+    <configuration>
+    <property><name>ozone.scm.block.client.address</name><value>scm-0.scm</value></property>
+    <property><name>ozone.handler.type</name><value>distributed</value></property>
+    <property><name>ozone.ksm.address</name><value>ksm-0.ksm</value></property>
+    <property><name>ozone.enabled</name><value>True</value></property>
+    <property><name>ozone.scm.datanode.id</name><value>/data/datanode.id</value></property>
+    <property><name>ozone.scm.client.address</name><value>scm</value></property>
+    <property><name>ozone.metadata.dirs</name><value>/data/metadata</value></property>
+    <property><name>ozone.scm.names</name><value>scm</value></property>
+    </configuration>
+kind: ConfigMap
+metadata:
+  name: hadoopconf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: namenode
+  labels:
+    app: namenode
+spec:
+  ports:
+  - port: 50070
+    name: web
+  clusterIP: None
+  selector:
+     app: namenode
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: namenode
+spec:
+  serviceName: namenode
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: namenode
+      annotations:
+        prometheus.io/scrape: true
+        prometheus.io/port: 28942
+    spec:
+      containers:
+        - name: namenode
+          image: flokkr/hadoop-hdfs-namenode:ozone
+          env:
+            - name: ENSURE_NAMENODE_DIR
+              value: /data/namenode
+            - name: PROMETHEUSJMX_ENABLED
+              value: true
+            - name: PROMETHEUSJMX_AGENTOPTS
+              value: port=28942
+          volumeMounts:
+            - name: config
+              mountPath: "/opt/hadoop/etc/hadoop"
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: hadoopconf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scm
+  labels:
+    app: scm
+spec:
+  clusterIP: None
+  ports:
+  - port: 9876
+    name: scm
+  selector:
+     app: scp
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: scm
+spec:
+  serviceName: scm
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: scm
+    spec:
+      containers:
+        - name: scm
+          image: flokkr/hadoop:ozone
+          args: ["hdfs","scm"]
+          env:
+            - name: ENSURE_SCM_INITIALIZED
+              value: /data/metadata/scm/current/VERSION
+          volumeMounts:
+            - name: config
+              mountPath: "/opt/hadoop/etc/hadoop"
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: hadoopconf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ksm
+  labels:
+    app: ksm
+spec:
+  ports:
+  - port: 9874
+    name: web
+  clusterIP: None
+  selector:
+     app: ksm
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: ksm
+spec:
+  serviceName: ksm
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ksm
+    spec:
+      containers:
+        - name: ksm
+          image: flokkr/hadoop:ozone
+          args: ["hdfs","ksm"]
+          volumeMounts:
+            - name: config
+              mountPath: "/opt/hadoop/etc/hadoop"
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: hadoopconf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: datanode
+  labels:
+    app: datanode
+spec:
+  ports:
+  - port: 80
+    name: web
+  clusterIP: None
+  selector:
+     app: datanode
+---
+  apiVersion: apps/v1beta1
+  kind: StatefulSet
+  metadata:
+    name: datanode
+  spec:
+    serviceName: datanode
+    replicas: 1
+    template:
+      metadata:
+        labels:
+          app: datanode
+      spec:
+        containers:
+          - name: datanode
+            image: flokkr/hadoop-hdfs-datanode:ozone
+            volumeMounts:
+              - name: config
+                mountPath: "/opt/hadoop/etc/hadoop"
+                readOnly: true
+        volumes:
+          - name: config
+            configMap:
+              name: hadoopconf
