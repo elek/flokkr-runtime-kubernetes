@@ -3,6 +3,8 @@ kind: Job
 metadata:
   name: corona
 spec:
+  completions: 10
+  parallelism: 10
   template:
     metadata:
       name: corona
@@ -20,4 +22,3 @@ spec:
         - name: config
           configMap:
             name: hadoopconf
-  backoffLimit: 4
