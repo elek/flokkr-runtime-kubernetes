@@ -1,3 +1,18 @@
+# !Archived!
+
+__This project is archived. Originally it was part of the https://github.com/flokkr project, but it's no longer maintained.__
+
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+
 # Hadoop cluster on kubernetes
 
 Example kubernetes definition for the [flokkr](https://github.com/flokkr/flokkr) docker images.
